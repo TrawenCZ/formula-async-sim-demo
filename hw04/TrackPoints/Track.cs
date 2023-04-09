@@ -43,7 +43,11 @@ public class Track
     /// <returns></returns>
     public IEnumerable<ITrackPoint> GetLap(RaceCar car)
     {
-        throw new NotImplementedException();
+        if (_pitLane == null || _pitLaneEntry == null || _pitLaneExit == null) throw new Exception("PitLane is not set");
+        var lapWithoutPitLane = _trackPoints.Where(trackPoint => trackPoint != _pitLaneEntry && trackPoint != _pitLane && trackPoint != _pitLaneExit);
+        var lapWithPitLaneEntry = _trackPoints.TakeWhile(trackPoint => trackPoint != _pitLane);
+        var lapWithPitLaneExit = _trackPoints.SkipWhile(trackPoint => trackPoint != _pitLane).Skip(1);
+        if (car.Lap.Number == 0) return _trackPoints;
     }
 
 }
