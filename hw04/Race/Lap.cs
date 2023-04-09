@@ -5,7 +5,7 @@ namespace hw04.Race;
 public class Lap
 {
     public RaceCar RaceCar { get; }
-    public int Number { get; }
+    public int Number { get; set; }
 
     public Lap(RaceCar car, int number)
     {
