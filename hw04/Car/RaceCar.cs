@@ -42,4 +42,11 @@ public class RaceCar
     public Tire GetCurrentTire() => TireStrategy[_currentTireIndex];
 
     public void ChangeTires() => _currentTireIndex++;
+
+    public void Reset()
+    {
+        _lap = 1;
+        _currentTireIndex = 0;
+        //TireStrategy.ForEach(t => t.Reset());
+    }
 }

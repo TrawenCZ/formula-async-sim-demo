@@ -14,11 +14,19 @@ public class Simulation
 
     public Task<Race.Race> SimulateRaceAsync(List<RaceCar> cars, int numberOfLaps)
     {
-        return Task.Run(() => new Race.Race(cars, _track, numberOfLaps, true));
+        return Task.Run(() =>
+        {
+            var newRace = new Race.Race(cars, _track, numberOfLaps, true);
+            newRace.StartAsync();
+            return newRace;
+        });
     }
 
     public Task<List<Lap>> SimulateLapsAsync(RaceCar car, int numberOfLaps)
     {
-        throw new NotImplementedException();
+        return Task.Run(() =>
+        {
+            return new Race.Race(new List<RaceCar>(new RaceCar[] { car }), _track, numberOfLaps, true).StartAsync().Result[car];
+        });
     }
 }

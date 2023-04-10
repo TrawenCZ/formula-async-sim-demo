@@ -29,6 +29,11 @@ public class Tire
         return _age;
     }
     
+    public void Reset()
+    {
+        _age = 0;
+    }
+
     public double GetSpeed()
     {
         return _tireType.Speed + (int.Max(_age - _tireType.OptimalLaps, 0) * _tireType.SlowdownPerLap)

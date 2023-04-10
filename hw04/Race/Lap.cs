@@ -7,10 +7,15 @@ public class Lap
     public RaceCar RaceCar { get; }
     public int Number { get; }
 
-    public Lap(RaceCar car, int number)
+    public List<TrackPointPass> TrackPointPasses { get; }
+    public TimeSpan CompletionTime { get; }
+
+    public Lap(RaceCar car, int number, List<TrackPointPass> trackPointPasses, TimeSpan completionTime)
     {
         RaceCar = car;
         Number = number;
+        TrackPointPasses = trackPointPasses;
+        CompletionTime = completionTime;
     }
     
 }
