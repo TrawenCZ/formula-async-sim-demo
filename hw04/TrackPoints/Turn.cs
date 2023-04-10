@@ -8,17 +8,13 @@ public class Turn : ITrackPoint
     private static readonly TimeSpan DriveInTime = TimeSpan.FromMilliseconds(5);
     public string Description { get; set; }
     private readonly TimeSpan _averageTime;
-    private readonly int _carsAllowed;
-    private List<Task<TimeSpan>> _currentTasksInEntry;
     private SemaphoreSlim _semaphore;
 
     public Turn(string description, TimeSpan averageTime, int carsAllowed)
     {
         Description = description;
         _averageTime = averageTime;
-        _carsAllowed = carsAllowed;
-        _currentTasksInEntry = new List<Task<TimeSpan>>();
-        _semaphore = new SemaphoreSlim(_carsAllowed);
+        _semaphore = new SemaphoreSlim(carsAllowed);
     }
 
     public Task<TrackPointPass> PassAsync(RaceCar car)

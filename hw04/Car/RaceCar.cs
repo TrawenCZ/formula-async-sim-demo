@@ -15,7 +15,14 @@ public class RaceCar
     public Team Team { get; set; }
     public double TurnSpeed { get; set; }
     public double StraightSpeed { get; set; }
-    public Lap Lap { get; }
+    private int _lap = 1;
+    public int Lap
+    {
+        get { return _lap; }
+        set {
+            if (value == _lap + 1) GetCurrentTire().AddLap();
+            _lap = value;
+        } }
     private int _currentTireIndex = 0;
     
 
@@ -29,17 +36,10 @@ public class RaceCar
         Team = team;
         TurnSpeed = turnSpeed;
         StraightSpeed = straightSpeed;
-        Lap = new Lap(this, 1);
         TireStrategy = new List<Tire>();
     }
 
     public Tire GetCurrentTire() => TireStrategy[_currentTireIndex];
 
     public void ChangeTires() => _currentTireIndex++;
-
-    public void AddLap()
-    {
-        Lap.Number++;
-        GetCurrentTire().AddLap();
-    }
 }

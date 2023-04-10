@@ -9,11 +9,13 @@ public class Race
     private Track _track;
     private int _numberOfLaps;
     private readonly IEnumerable<RaceCar> _cars;
-    public Race(IEnumerable<RaceCar> cars, Track track, int numberOfLaps)
+    private readonly bool _verbose;
+    public Race(IEnumerable<RaceCar> cars, Track track, int numberOfLaps, bool verbose)
     {
         _track = track;
         _numberOfLaps = numberOfLaps;
-        _cars = cars;
+        _cars = new List<RaceCar>(cars);
+        _verbose = verbose;
     }
     
     public Task StartAsync()
@@ -23,6 +25,7 @@ public class Race
             DateTime startTime = DateTime.Now;
             bool shouldEnd = false;
             ConcurrentDictionary<int, TimeSpan> lapCompletionTimes = new ConcurrentDictionary<int, TimeSpan>();
+            ConcurrentDictionary<RaceCar, List<TrackPointPass>> carsTrackPointPasses = new ConcurrentDictionary<RaceCar, List<TrackPointPass>>();
             var tasks = new List<Task>();
             foreach (var car in _cars)
             {
@@ -32,23 +35,27 @@ public class Race
                     {
                         foreach (var trackPoint in _track.GetLap(car))
                         {
-                            var bla = trackPoint.PassAsync(car).Result;
+                            carsTrackPointPasses[car].Add(trackPoint.PassAsync(car).Result);
                         }
                         TimeSpan lapCompletionTime = TimeSpan.FromMilliseconds(0);
-                        if (lapCompletionTimes.TryGetValue(car.Lap.Number, out lapCompletionTime))
+                        if (lapCompletionTimes.TryGetValue(car.Lap, out lapCompletionTime) && _verbose)
                         {
-                            Console.WriteLine($"{car.Driver}: +{(DateTime.Now - lapCompletionTime - startTime).ToString(@"m\:ss\.ff")}");
+                            Console.WriteLine($"{car.Driver}: +{(DateTime.Now - lapCompletionTime - startTime).ToString(@"mm\:ss\.ff")}");
                         }
-                        else if (lapCompletionTimes.TryAdd(car.Lap.Number, DateTime.Now - startTime))
+                        else if (lapCompletionTimes.TryAdd(car.Lap, DateTime.Now - startTime) && _verbose)
                         {
-                            Console.WriteLine($"\nLap: {car.Lap.Number}\n{car.Driver}: {lapCompletionTimes[car.Lap.Number].ToString(@"m\:ss\.ff")}");
+                            if (_verbose) Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {lapCompletionTimes[car.Lap].ToString(@"mm\:ss\.ff")}");
+                        } else if (_verbose)
+                        {
+                            Console.WriteLine($"{car.Driver}: {(DateTime.Now - lapCompletionTimes[car.Lap] - startTime).ToString(@"mm\:ss\.ff")}");
                         }
-                        if (car.Lap.Number == _numberOfLaps) shouldEnd = true;
-                        car.AddLap();
+                        if (car.Lap == _numberOfLaps) shouldEnd = true;
+                        car.Lap++;
                     }
                 }));
             }
             Task.WaitAll(tasks.ToArray());
+            return carsTrackPointPasses;
         });
     }
 }

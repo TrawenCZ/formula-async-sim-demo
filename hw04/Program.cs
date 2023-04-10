@@ -3,7 +3,7 @@ using hw04.Race;
 
 CurrentF1.Cars.All.ForEach(c => c.SetMediumHardStrategy());
 
-await new Race(CurrentF1.Cars.All, CurrentF1.Tracks.Silverstone, 52).StartAsync();
+await new Race(CurrentF1.Cars.All, CurrentF1.Tracks.Silverstone, 52, true).StartAsync();
 
 /*
 var race = await new Simulation(CurrentF1.Tracks.Silverstone).SimulateLapsAsync(CurrentF1.Cars.All.First(), 52);
