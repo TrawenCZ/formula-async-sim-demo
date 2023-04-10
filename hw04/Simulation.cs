@@ -16,7 +16,7 @@ public class Simulation
     {
         return Task.Run(() =>
         {
-            var newRace = new Race.Race(cars, _track, numberOfLaps, true);
+            var newRace = new Race.Race(cars, _track, numberOfLaps);
             newRace.StartAsync();
             return newRace;
         });
@@ -26,7 +26,7 @@ public class Simulation
     {
         return Task.Run(() =>
         {
-            var race = new Race.Race(new List<RaceCar>(new RaceCar[] { car }), _track, numberOfLaps, true);
+            var race = new Race.Race(new List<RaceCar>(new RaceCar[] { car }), _track, numberOfLaps);
             race.StartAsync().Wait();
             return race.RaceResults == null ? new List<Lap>() : race.RaceResults[car].ToList();
         });

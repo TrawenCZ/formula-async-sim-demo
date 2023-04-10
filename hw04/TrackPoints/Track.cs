@@ -56,7 +56,7 @@ public class Track
     {
         if (_pitLane == null || _pitLaneEntry == null || _pitLaneExit == null) throw new Exception("PitLane is not set");
         if (car.GetCurrentTire().NeedsChange()) return _lapWithPitLaneEntry;
-        if (car.Lap != 0 && car.GetCurrentTire().GetAge() == 0) return _lapWithPitLaneExit;
+        if (car.Lap != 1 && car.GetCurrentTire().GetAge() == 0) return _lapWithPitLaneExit;
         return _trackPoints;
     }
 

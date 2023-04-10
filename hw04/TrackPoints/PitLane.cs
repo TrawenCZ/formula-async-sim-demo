@@ -29,7 +29,7 @@ public class PitLane : ITrackPoint
             }
             var pitStopTime = TimeSpan.FromMilliseconds(_random.Next(50, 101));
             currentPitStopExchanges[car.Team] = Task.Delay(pitStopTime);
-            Thread.Sleep(pitStopTime);
+            currentPitStopExchanges[car.Team].Wait();
             car.ChangeTires();
             return new TrackPointPass(this, waitingTime, pitStopTime);
         });

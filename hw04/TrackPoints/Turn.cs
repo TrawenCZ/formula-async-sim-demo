@@ -22,14 +22,13 @@ public class Turn : ITrackPoint
         return Task.Run(() =>
             {
                 var turnEnteredDateTime = DateTime.Now;
-                var waitingTime = TimeSpan.Zero;
                 _semaphore.Wait();
-                Thread.Sleep(waitingTime);
-                _semaphore.Release();
-                waitingTime += DateTime.Now - turnEnteredDateTime;
-                var drivingTime = DriveInTime + _averageTime * car.TurnSpeed * car.GetCurrentTire().GetSpeed();
+                var waitingTime = DateTime.Now - turnEnteredDateTime;
+                Thread.Sleep(DriveInTime);
+                _semaphore.Release();              
+                var drivingTime = _averageTime * car.TurnSpeed * car.GetCurrentTire().GetSpeed();
                 Thread.Sleep(drivingTime);
-                return new TrackPointPass(this, waitingTime, drivingTime);
+                return new TrackPointPass(this, waitingTime, DriveInTime + drivingTime);
            });
     }
 }

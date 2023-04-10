@@ -9,14 +9,12 @@ public class Race
     private Track _track;
     private int _numberOfLaps;
     private readonly IEnumerable<RaceCar> _cars;
-    private readonly bool _verbose;
     public ConcurrentDictionary<RaceCar, List<Lap>>? RaceResults { get; private set; }
-    public Race(IEnumerable<RaceCar> cars, Track track, int numberOfLaps, bool verbose)
+    public Race(IEnumerable<RaceCar> cars, Track track, int numberOfLaps)
     {
         _track = track;
         _numberOfLaps = numberOfLaps;
         _cars = cars;
-        _verbose = verbose;
         RaceResults = null;
     }
     
@@ -41,25 +39,24 @@ public class Race
                         foreach (var trackPoint in _track.GetLap(car))
                         {
                             trackPointsPasses.Add(trackPoint.PassAsync(car).Result);
+                            //Console.WriteLine(trackPoint.Description + "\n" + trackPoint.PassAsync(car).Result.DrivingTime.TotalMilliseconds);
                         }
                         TimeSpan lapCompletionTime = DateTime.Now - dateTimeWhenLapStarted;
                         carsLaps[car].Add(new Lap(car, car.Lap, trackPointsPasses, lapCompletionTime));
 
-                        if (_verbose)
+                        TimeSpan lapBestCompletionTime = lapBestCompletionTimes.GetOrAdd(car.Lap, lapCompletionTime);
+                        if (lapBestCompletionTimes.ContainsKey(car.Lap + 1))
                         {
-                            TimeSpan lapBestCompletionTime = TimeSpan.FromMilliseconds(0);
-                            if (lapBestCompletionTimes.TryGetValue(car.Lap, out lapBestCompletionTime))
-                            {
-                                Console.WriteLine($"{car.Driver}: +{(lapCompletionTime - lapBestCompletionTime).ToString(@"mm\:ss\.ff")}");
-                            }
-                            else if (lapBestCompletionTimes.TryAdd(car.Lap, lapCompletionTime))
-                            {
-                                Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {(DateTime.Now - raceStartDateTime).ToString(@"mm\:ss\.ff")}");
-                            }
-                            else 
-                            {
-                                Console.WriteLine($"{car.Driver}: {(lapCompletionTime - lapBestCompletionTimes[car.Lap]).ToString(@"mm\:ss\.ff")}");
-                            }
+                            car.Lap++;
+                            continue;
+                        }
+                        if (lapBestCompletionTime.Equals(lapCompletionTime))
+                        {
+                            Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {(DateTime.Now - raceStartDateTime).ToString(@"mm\:ss\.ff")}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{car.Driver}: +{(lapCompletionTime - lapBestCompletionTime).ToString(@"mm\:ss\.ff")}");
                         }
                         if (car.Lap == _numberOfLaps) shouldEnd = true;
                         car.Lap++;
