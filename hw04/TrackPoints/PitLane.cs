@@ -30,7 +30,6 @@ public class PitLane : ITrackPoint
             var pitStopTime = TimeSpan.FromMilliseconds(_random.Next(50, 101));
             currentPitStopExchanges[car.Team] = Task.Delay(pitStopTime);
             Thread.Sleep(pitStopTime);
-            car.GetCurrentTire().Reset();   // Tires get instantly repaired in pit stop
             car.ChangeTires();
             return new TrackPointPass(this, waitingTime, pitStopTime);
         });

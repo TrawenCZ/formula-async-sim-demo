@@ -47,6 +47,6 @@ public class RaceCar
     {
         _lap = 1;
         _currentTireIndex = 0;
-        //TireStrategy.ForEach(t => t.Reset());
+        TireStrategy.ForEach(t => t.Reset());
     }
 }
