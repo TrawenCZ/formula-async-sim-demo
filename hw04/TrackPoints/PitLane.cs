@@ -1,6 +1,7 @@
 using hw04.Car;
 using hw04.Race;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace hw04.TrackPoints;
 
@@ -18,14 +19,15 @@ public class PitLane : ITrackPoint
     public Task<TrackPointPass> PassAsync(RaceCar car)
     {
         return Task.Run(() =>
-        {
+        {   
             var waitingTime = TimeSpan.Zero;
             Task? currentPitStopExchange = null;
             if (currentPitStopExchanges.TryGetValue(car.Team, out currentPitStopExchange))
             {
-                var dateTimeBeforeWait = DateTime.Now;
+                Stopwatch stopwatch = Stopwatch.StartNew();
                 currentPitStopExchange.Wait();
-                waitingTime += DateTime.Now - dateTimeBeforeWait;
+                stopwatch.Stop();
+                waitingTime += stopwatch.Elapsed;
             }
             var pitStopTime = TimeSpan.FromMilliseconds(_random.Next(50, 101));
             currentPitStopExchanges[car.Team] = Task.Delay(pitStopTime);

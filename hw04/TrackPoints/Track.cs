@@ -40,7 +40,7 @@ public class Track
         _lapWithPitLaneEntry = new List<ITrackPoint>(_trackPoints) { _pitLane };
 
         _lapWithPitLaneExit = new List<ITrackPoint>(_trackPoints);
-        _lapWithPitLaneExit.RemoveRange(0, nextPoint);
+        _lapWithPitLaneExit.RemoveRange(0, nextPoint + 1);
         _lapWithPitLaneExit = new List<ITrackPoint>(new ITrackPoint[] { _pitLane, _pitLaneExit }).Concat(_lapWithPitLaneExit).ToList();
 
         return this;

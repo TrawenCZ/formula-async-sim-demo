@@ -1,5 +1,6 @@
 using hw04.Car;
 using hw04.Race;
+using System.Diagnostics;
 
 namespace hw04.TrackPoints;
 
@@ -14,7 +15,7 @@ public class Turn : ITrackPoint
     {
         Description = description;
         _averageTime = averageTime;
-        _semaphore = new SemaphoreSlim(carsAllowed);
+        _semaphore = new SemaphoreSlim(carsAllowed, carsAllowed);
     }
 
     public Task<TrackPointPass> PassAsync(RaceCar car)
@@ -22,11 +23,15 @@ public class Turn : ITrackPoint
         return Task.Run(() =>
             {
                 var turnEnteredDateTime = DateTime.Now;
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
                 _semaphore.Wait();
-                var waitingTime = DateTime.Now - turnEnteredDateTime;
+                stopwatch.Stop();
+                TimeSpan waitingTime = stopwatch.Elapsed;
                 Thread.Sleep(DriveInTime);
-                _semaphore.Release();              
-                var drivingTime = _averageTime * car.TurnSpeed * car.GetCurrentTire().GetSpeed();
+                _semaphore.Release();
+                
+                TimeSpan drivingTime = _averageTime * car.TurnSpeed * car.GetCurrentTire().GetSpeed();
                 Thread.Sleep(drivingTime);
                 return new TrackPointPass(this, waitingTime, DriveInTime + drivingTime);
            });

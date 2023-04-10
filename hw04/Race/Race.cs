@@ -1,6 +1,7 @@
 using hw04.Car;
 using hw04.TrackPoints;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace hw04.Race;
 
@@ -22,7 +23,6 @@ public class Race
     {
         return Task.Run(() =>
         {
-            DateTime raceStartDateTime = DateTime.Now;
             bool shouldEnd = false;
             ConcurrentDictionary<int, TimeSpan> lapBestCompletionTimes = new ConcurrentDictionary<int, TimeSpan>();
             ConcurrentDictionary<RaceCar, List<Lap>> carsLaps = new ConcurrentDictionary<RaceCar, List<Lap>>();
@@ -32,31 +32,33 @@ public class Race
                 tasks.Add(Task.Run(() =>
                 {
                     carsLaps.TryAdd(car, new List<Lap>());
+                    TimeSpan timeElapsedSinceStart = TimeSpan.Zero;
                     while (!shouldEnd)
                     {
                         List<TrackPointPass> trackPointsPasses = new List<TrackPointPass>();
-                        DateTime dateTimeWhenLapStarted = DateTime.Now;
+                        TimeSpan lapCompletionTime = TimeSpan.Zero;
                         foreach (var trackPoint in _track.GetLap(car))
                         {
-                            trackPointsPasses.Add(trackPoint.PassAsync(car).Result);
-                            //Console.WriteLine(trackPoint.Description + "\n" + trackPoint.PassAsync(car).Result.DrivingTime.TotalMilliseconds);
+                            var trackPointResult = trackPoint.PassAsync(car).Result;
+                            lapCompletionTime += trackPointResult.WaitingTime + trackPointResult.DrivingTime;
+                            trackPointsPasses.Add(trackPointResult);
                         }
-                        TimeSpan lapCompletionTime = DateTime.Now - dateTimeWhenLapStarted;
                         carsLaps[car].Add(new Lap(car, car.Lap, trackPointsPasses, lapCompletionTime));
 
-                        TimeSpan lapBestCompletionTime = lapBestCompletionTimes.GetOrAdd(car.Lap, lapCompletionTime);
+                        timeElapsedSinceStart += lapCompletionTime;
+                        TimeSpan bestTimeElapsedSinceStart = lapBestCompletionTimes.GetOrAdd(car.Lap, timeElapsedSinceStart);
                         if (lapBestCompletionTimes.ContainsKey(car.Lap + 1))
                         {
                             car.Lap++;
                             continue;
                         }
-                        if (lapBestCompletionTime.Equals(lapCompletionTime))
+                        if (bestTimeElapsedSinceStart.Equals(timeElapsedSinceStart))
                         {
-                            Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {(DateTime.Now - raceStartDateTime).ToString(@"mm\:ss\.ff")}");
+                            Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {timeElapsedSinceStart.ToString(@"mm\:ss\.ff")}");
                         }
                         else
                         {
-                            Console.WriteLine($"{car.Driver}: +{(lapCompletionTime - lapBestCompletionTime).ToString(@"mm\:ss\.ff")}");
+                            Console.WriteLine($"{car.Driver}: +{(timeElapsedSinceStart - bestTimeElapsedSinceStart).ToString(@"mm\:ss\.ff")}");
                         }
                         if (car.Lap == _numberOfLaps) shouldEnd = true;
                         car.Lap++;
