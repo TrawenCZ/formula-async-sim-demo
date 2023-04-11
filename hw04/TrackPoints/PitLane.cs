@@ -18,20 +18,20 @@ public class PitLane : ITrackPoint
 
     public Task<TrackPointPass> PassAsync(RaceCar car)
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
         {   
             var waitingTime = TimeSpan.Zero;
             Task? currentPitStopExchange = null;
             if (currentPitStopExchanges.TryGetValue(car.Team, out currentPitStopExchange))
             {
                 Stopwatch stopwatch = Stopwatch.StartNew();
-                currentPitStopExchange.Wait();
+                await currentPitStopExchange;
                 stopwatch.Stop();
                 waitingTime += stopwatch.Elapsed;
             }
             var pitStopTime = TimeSpan.FromMilliseconds(_random.Next(50, 101));
             currentPitStopExchanges[car.Team] = Task.Delay(pitStopTime);
-            currentPitStopExchanges[car.Team].Wait();
+            await currentPitStopExchanges[car.Team];
             car.ChangeTires();
             return new TrackPointPass(this, waitingTime, pitStopTime);
         });

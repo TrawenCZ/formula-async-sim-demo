@@ -20,19 +20,18 @@ public class Turn : ITrackPoint
 
     public Task<TrackPointPass> PassAsync(RaceCar car)
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
             {
-                var turnEnteredDateTime = DateTime.Now;
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
                 _semaphore.Wait();
                 stopwatch.Stop();
                 TimeSpan waitingTime = stopwatch.Elapsed;
-                Thread.Sleep(DriveInTime);
+                await Task.Delay(DriveInTime);
                 _semaphore.Release();
                 
                 TimeSpan drivingTime = _averageTime * car.TurnSpeed * car.GetCurrentTire().GetSpeed();
-                Thread.Sleep(drivingTime);
+                await Task.Delay(drivingTime);
                 return new TrackPointPass(this, waitingTime, DriveInTime + drivingTime);
            });
     }

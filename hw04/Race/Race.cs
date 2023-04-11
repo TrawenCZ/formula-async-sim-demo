@@ -21,7 +21,7 @@ public class Race
     
     public Task StartAsync()
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
         {
             bool shouldEnd = false;
             ConcurrentDictionary<int, TimeSpan> lapBestCompletionTimes = new ConcurrentDictionary<int, TimeSpan>();
@@ -29,7 +29,7 @@ public class Race
             var tasks = new List<Task>();
             foreach (var car in _cars)
             {
-                tasks.Add(Task.Run(() =>
+                tasks.Add(Task.Run(async () =>
                 {
                     carsLaps.TryAdd(car, new List<Lap>());
                     TimeSpan timeElapsedSinceStart = TimeSpan.Zero;
@@ -39,7 +39,7 @@ public class Race
                         TimeSpan lapCompletionTime = TimeSpan.Zero;
                         foreach (var trackPoint in _track.GetLap(car))
                         {
-                            var trackPointResult = trackPoint.PassAsync(car).Result;
+                            var trackPointResult = await trackPoint.PassAsync(car);
                             lapCompletionTime += trackPointResult.WaitingTime + trackPointResult.DrivingTime;
                             trackPointsPasses.Add(trackPointResult);
                         }
@@ -65,7 +65,7 @@ public class Race
                     }
                 }));
             }
-            Task.WaitAll(tasks.ToArray());
+            await Task.WhenAll(tasks.ToArray());
             foreach (RaceCar car in _cars) car.Reset();
             RaceResults = carsLaps;
         });
