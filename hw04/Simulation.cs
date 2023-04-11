@@ -24,10 +24,10 @@ public class Simulation
 
     public Task<List<Lap>> SimulateLapsAsync(RaceCar car, int numberOfLaps)
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
         {
             var race = new Race.Race(new List<RaceCar>(new RaceCar[] { car }), _track, numberOfLaps);
-            race.StartAsync().Wait();
+            await race.StartAsync();
             return race.RaceResults == null ? new List<Lap>() : race.RaceResults[car].ToList();
         });
     }

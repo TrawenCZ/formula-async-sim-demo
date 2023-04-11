@@ -9,11 +9,15 @@ public class PitLane : ITrackPoint
 {
     public string Description { get; set; }
     private readonly Random _random = new Random();
-    private ConcurrentDictionary<Team, Task> currentPitStopExchanges = new ConcurrentDictionary<Team, Task>();
+    private ConcurrentDictionary<Team, SemaphoreSlim> currentPitStopExchanges = new ConcurrentDictionary<Team, SemaphoreSlim>();
 
     public PitLane(string description, List<Team> teams)
     {
         Description = description;
+        foreach (var team in teams)
+        {
+            currentPitStopExchanges.TryAdd(team, new SemaphoreSlim(1, 1));
+        }
     }
 
     public Task<TrackPointPass> PassAsync(RaceCar car)
@@ -21,8 +25,8 @@ public class PitLane : ITrackPoint
         return Task.Run(async () =>
         {   
             var waitingTime = TimeSpan.Zero;
-            Task? currentPitStopExchange = null;
-            if (currentPitStopExchanges.TryGetValue(car.Team, out currentPitStopExchange))
+
+            if (currentPitStopExchanges.TryGetValue(car.Team, out var currentPitStopExchange))
             {
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 await currentPitStopExchange;
