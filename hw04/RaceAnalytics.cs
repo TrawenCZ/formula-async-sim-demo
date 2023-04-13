@@ -56,11 +56,11 @@ public static class RaceAnalytics
         if (race.RaceResults == null) throw new ArgumentException(_raceHasntFinishedMsg);
         ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)> fastestDrive = new ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)>();
         ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)> longestWait = new ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)>();
-        Task.WhenAll(race.RaceResults.Select(carResult => Task.Run(() =>
+        race.RaceResults.AsParallel().ForAll(carResult =>
         {
-            Parallel.ForEach(carResult.Value, lap =>
+            carResult.Value.AsParallel().ForAll(lap =>
             {
-                Parallel.ForEach(lap.TrackPointPasses, p =>
+                lap.TrackPointPasses.ForEach(p =>
                 {
                     fastestDrive.AddOrUpdate(p.TrackPoint, (lap, p.DrivingTime), (key, value) =>
                     {
@@ -81,7 +81,7 @@ public static class RaceAnalytics
                     });
                 });
             });
-        })).ToArray()).GetAwaiter().GetResult();
+        });
 
         foreach (ITrackPoint trackPoint in fastestDrive.Keys)
         {

@@ -24,20 +24,13 @@ public class PitLane : ITrackPoint
     {
         return Task.Run(async () =>
         {   
-            var waitingTime = TimeSpan.Zero;
+            var timeBeforeWait = car.Stopwatch.Elapsed;
+            await currentPitStopExchanges[car.Team].WaitAsync();
+            var waitingTime = car.Stopwatch.Elapsed - timeBeforeWait;
 
-            if (currentPitStopExchanges.TryGetValue(car.Team, out var currentPitStopExchange))
-            {
-                Stopwatch stopwatch = Stopwatch.StartNew();
-                await currentPitStopExchange;
-                stopwatch.Stop();
-                waitingTime += stopwatch.Elapsed;
-            }
-            var pitStopTime = TimeSpan.FromMilliseconds(_random.Next(50, 101));
-            currentPitStopExchanges[car.Team] = Task.Delay(pitStopTime);
-            await currentPitStopExchanges[car.Team];
+            await Task.Delay(TimeSpan.FromMilliseconds(_random.Next(50, 101)));
             car.ChangeTires();
-            return new TrackPointPass(this, waitingTime, pitStopTime);
+            return new TrackPointPass(this, waitingTime, car.Stopwatch.Elapsed - waitingTime);
         });
     }
 }

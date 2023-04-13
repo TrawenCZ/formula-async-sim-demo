@@ -27,26 +27,34 @@ public class Race
             ConcurrentDictionary<int, TimeSpan> lapBestCompletionTimes = new ConcurrentDictionary<int, TimeSpan>();
             ConcurrentDictionary<RaceCar, List<Lap>> carsLaps = new ConcurrentDictionary<RaceCar, List<Lap>>();
             var tasks = new List<Task>();
+            foreach (RaceCar car in _cars)
+            {
+                carsLaps.TryAdd(car, new List<Lap>());
+            }
+            foreach (RaceCar car in _cars)
+            {
+                car.Stopwatch.Start();
+            }
             foreach (var car in _cars)
             {
                 tasks.Add(Task.Run(async () =>
                 {
-                    carsLaps.TryAdd(car, new List<Lap>());
-                    TimeSpan timeElapsedSinceStart = TimeSpan.Zero;
+                    List<TrackPointPass> trackPointsPasses;
+                    TimeSpan bestTimeElapsedSinceStart;
+                    TimeSpan timeElapsedSinceStart;
+                    TimeSpan timeBeforeLap;
                     while (!shouldEnd)
                     {
-                        List<TrackPointPass> trackPointsPasses = new List<TrackPointPass>();
-                        TimeSpan lapCompletionTime = TimeSpan.Zero;
+                        timeBeforeLap = car.Stopwatch.Elapsed;
+                        trackPointsPasses = new List<TrackPointPass>();
                         foreach (var trackPoint in _track.GetLap(car))
                         {
-                            var trackPointResult = await trackPoint.PassAsync(car);
-                            lapCompletionTime += trackPointResult.WaitingTime + trackPointResult.DrivingTime;
-                            trackPointsPasses.Add(trackPointResult);
+                            trackPointsPasses.Add(await trackPoint.PassAsync(car));
                         }
-                        carsLaps[car].Add(new Lap(car, car.Lap, trackPointsPasses, lapCompletionTime));
+                        carsLaps[car].Add(new Lap(car, car.Lap, trackPointsPasses, car.Stopwatch.Elapsed - timeBeforeLap));
 
-                        timeElapsedSinceStart += lapCompletionTime;
-                        TimeSpan bestTimeElapsedSinceStart = lapBestCompletionTimes.GetOrAdd(car.Lap, timeElapsedSinceStart);
+                        timeElapsedSinceStart = car.Stopwatch.Elapsed;
+                        bestTimeElapsedSinceStart = lapBestCompletionTimes.GetOrAdd(car.Lap, timeElapsedSinceStart);
                         if (lapBestCompletionTimes.ContainsKey(car.Lap + 1))
                         {
                             car.Lap++;
@@ -54,11 +62,11 @@ public class Race
                         }
                         if (bestTimeElapsedSinceStart.Equals(timeElapsedSinceStart))
                         {
-                            Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {timeElapsedSinceStart.ToString(@"mm\:ss\.ff")}");
+                            Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {(car.Stopwatch.Elapsed - timeBeforeLap).ToString(@"mm\:ss\.ff")}");
                         }
                         else
                         {
-                            Console.WriteLine($"{car.Driver}: +{(timeElapsedSinceStart - bestTimeElapsedSinceStart).ToString(@"mm\:ss\.ff")}");
+                            Console.WriteLine($"{car.Driver}: +{(car.Stopwatch.Elapsed - bestTimeElapsedSinceStart).ToString(@"mm\:ss\.ff")}");
                         }
                         if (car.Lap == _numberOfLaps) shouldEnd = true;
                         car.Lap++;

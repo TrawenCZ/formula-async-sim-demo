@@ -1,5 +1,6 @@
 using hw04.Car.Tires;
 using hw04.Race;
+using System.Diagnostics;
 using System.Timers;
 
 namespace hw04.Car;
@@ -15,6 +16,7 @@ public class RaceCar
     public Team Team { get; set; }
     public double TurnSpeed { get; set; }
     public double StraightSpeed { get; set; }
+    public Stopwatch Stopwatch { get; }
     private int _lap = 1;
     public int Lap
     {
@@ -37,6 +39,7 @@ public class RaceCar
         TurnSpeed = turnSpeed;
         StraightSpeed = straightSpeed;
         TireStrategy = new List<Tire>();
+        Stopwatch = new Stopwatch();
     }
 
     public Tire GetCurrentTire() => TireStrategy[_currentTireIndex];
