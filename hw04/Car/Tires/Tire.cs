@@ -24,15 +24,6 @@ public class Tire
     {
         return _age >= _changeAfter;
     }
-    public int GetAge()
-    {
-        return _age;
-    }
-    
-    public void Reset()
-    {
-        _age = 0;
-    }
 
     public double GetSpeed()
     {

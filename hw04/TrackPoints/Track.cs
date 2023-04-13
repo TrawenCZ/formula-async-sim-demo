@@ -37,7 +37,7 @@ public class Track
         _pitLaneEntry = new Turn("PitLane Entry", entryTime, 1);
         _pitLaneExit = new Turn("PitLane Exit", exitTime, 1);
 
-        _lapWithPitLaneEntry = new List<ITrackPoint>(_trackPoints) { _pitLane };
+        _lapWithPitLaneEntry = new List<ITrackPoint>(_trackPoints) { _pitLaneEntry };
 
         _lapWithPitLaneExit = new List<ITrackPoint>(_trackPoints);
         _lapWithPitLaneExit.RemoveRange(0, nextPoint + 1);
@@ -55,8 +55,16 @@ public class Track
     public IEnumerable<ITrackPoint> GetLap(RaceCar car)
     {
         if (_pitLane == null || _pitLaneEntry == null || _pitLaneExit == null) throw new Exception("PitLane is not set");
-        if (car.GetCurrentTire().NeedsChange()) return _lapWithPitLaneEntry;
-        if (car.Lap != 1 && car.GetCurrentTire().GetAge() == 0) return _lapWithPitLaneExit;
+        if (car.ShouldChangeTires()) 
+        {
+            car.WentToPitStop = true;
+            return _lapWithPitLaneEntry;
+        }
+        if (car.WentToPitStop)
+        {
+            car.WentToPitStop = false;
+            return _lapWithPitLaneExit;
+        }
         return _trackPoints;
     }
 

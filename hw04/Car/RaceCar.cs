@@ -17,6 +17,7 @@ public class RaceCar
     public double TurnSpeed { get; set; }
     public double StraightSpeed { get; set; }
     public Stopwatch Stopwatch { get; }
+    public bool WentToPitStop { get; set; }
     private int _lap = 1;
     public int Lap
     {
@@ -40,9 +41,11 @@ public class RaceCar
         StraightSpeed = straightSpeed;
         TireStrategy = new List<Tire>();
         Stopwatch = new Stopwatch();
+        WentToPitStop = false;
     }
 
     public Tire GetCurrentTire() => TireStrategy[_currentTireIndex];
+    public bool ShouldChangeTires() => (_currentTireIndex + 1 != TireStrategy.Count) && GetCurrentTire().NeedsChange();
 
     public void ChangeTires() => _currentTireIndex++;
 
@@ -51,6 +54,5 @@ public class RaceCar
         _lap = 1;
         _currentTireIndex = 0;
         Stopwatch.Reset();
-        TireStrategy.ForEach(t => t.Reset());
     }
 }
