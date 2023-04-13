@@ -28,7 +28,7 @@ public class Turn : ITrackPoint
                 TimeSpan waitingTime = car.Stopwatch.Elapsed - timeBeforeWait;
                 await Task.Delay(DriveInTime);
                 _semaphore.Release();
-                
+
                 await Task.Delay(_averageTime * car.TurnSpeed * car.GetCurrentTire().GetSpeed());
                 return new TrackPointPass(this, waitingTime, car.Stopwatch.Elapsed - waitingTime);
            });

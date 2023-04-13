@@ -27,6 +27,7 @@ public class Race
             ConcurrentDictionary<int, TimeSpan> lapBestCompletionTimes = new ConcurrentDictionary<int, TimeSpan>();
             ConcurrentDictionary<RaceCar, List<Lap>> carsLaps = new ConcurrentDictionary<RaceCar, List<Lap>>();
             var tasks = new List<Task>();
+            var lapsHeaderPrinted = Enumerable.Repeat(false, _numberOfLaps + 1).ToList();   // + 1 so I can use lap number as index
             foreach (RaceCar car in _cars)
             {
                 carsLaps.TryAdd(car, new List<Lap>());
@@ -55,17 +56,14 @@ public class Race
 
                         timeElapsedSinceStart = car.Stopwatch.Elapsed;
                         bestTimeElapsedSinceStart = lapBestCompletionTimes.GetOrAdd(car.Lap, timeElapsedSinceStart);
-                        if (lapBestCompletionTimes.ContainsKey(car.Lap + 1))
-                        {
-                            car.Lap++;
-                            continue;
-                        }
                         if (bestTimeElapsedSinceStart.Equals(timeElapsedSinceStart))
                         {
                             Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {(car.Stopwatch.Elapsed - timeBeforeLap).ToString(@"mm\:ss\.ff")}");
+                            lapsHeaderPrinted[car.Lap] = true;
                         }
-                        else
+                        else if (!lapBestCompletionTimes.ContainsKey(car.Lap + 1))
                         {
+                            while (!lapsHeaderPrinted[car.Lap]) continue;
                             Console.WriteLine($"{car.Driver}: +{(car.Stopwatch.Elapsed - bestTimeElapsedSinceStart).ToString(@"mm\:ss\.ff")}");
                         }
                         if (car.Lap == _numberOfLaps) shouldEnd = true;

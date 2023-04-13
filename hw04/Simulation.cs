@@ -14,10 +14,10 @@ public class Simulation
 
     public Task<Race.Race> SimulateRaceAsync(List<RaceCar> cars, int numberOfLaps)
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
         {
             var newRace = new Race.Race(cars, _track, numberOfLaps);
-            newRace.StartAsync();
+            await newRace.StartAsync();
             return newRace;
         });
     }

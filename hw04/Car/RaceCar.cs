@@ -50,6 +50,7 @@ public class RaceCar
     {
         _lap = 1;
         _currentTireIndex = 0;
+        Stopwatch.Reset();
         TireStrategy.ForEach(t => t.Reset());
     }
 }
