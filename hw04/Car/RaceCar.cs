@@ -16,7 +16,7 @@ public class RaceCar
     public Team Team { get; set; }
     public double TurnSpeed { get; set; }
     public double StraightSpeed { get; set; }
-    public Stopwatch Stopwatch { get; }
+    public Stopwatch Stopwatch { get; set; }
     public bool WentToPitStop { get; set; }
     private int _lap = 1;
     public int Lap

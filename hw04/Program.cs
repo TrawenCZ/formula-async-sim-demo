@@ -22,7 +22,7 @@ foreach (var (driver, lapNum) in race2.GetFastestLaps())
     Console.WriteLine($"{driver}'s fastest lap is {lapNum}");
 }
 
-race2.PrintOrderTableOfLap(22);
+race2.PrintOrderTableOfLap(3);
 race2.PrintTrackPointsStatistics();
-Console.WriteLine("Hovno");
+Console.WriteLine("\nHovno\n");
 race2.PrintTrackPointsStatistics();

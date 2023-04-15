@@ -27,15 +27,21 @@ public class Race
             ConcurrentDictionary<int, TimeSpan> lapBestCompletionTimes = new ConcurrentDictionary<int, TimeSpan>();
             ConcurrentDictionary<RaceCar, List<Lap>> carsLaps = new ConcurrentDictionary<RaceCar, List<Lap>>();
             var tasks = new List<Task>();
-            var lapsHeaderPrinted = Enumerable.Repeat(false, _numberOfLaps + 1).ToList();   // + 1 so I can use lap number as index
+            SemaphoreSlim printAsyncMutex = new SemaphoreSlim(1, 1);    // Mutex itself cannot be async, so this is a workaround
+            ManualResetEventSlim startSignal = new ManualResetEventSlim(false);
+            //CountdownEvent allCarsReady = new CountdownEvent(_cars.Count());
+            //var lapsHeaderPrinted = Enumerable.Repeat(false, _numberOfLaps + 1).ToList();   // + 1 so I can use lap number as index
             foreach (RaceCar car in _cars)
             {
                 carsLaps.TryAdd(car, new List<Lap>());
             }
+
+            Stopwatch raceStopwatch = new Stopwatch();
             foreach (RaceCar car in _cars)
             {
-                car.Stopwatch.Start();
+                car.Stopwatch = raceStopwatch;
             }
+
             foreach (var car in _cars)
             {
                 tasks.Add(Task.Run(async () =>
@@ -43,34 +49,39 @@ public class Race
                     List<TrackPointPass> trackPointsPasses;
                     TimeSpan bestTimeElapsedSinceStart;
                     TimeSpan timeElapsedSinceStart;
-                    TimeSpan timeBeforeLap;
+                    TimeSpan totalDriveTime = TimeSpan.Zero;
+                    //allCarsReady.Signal();
+                    startSignal.Wait();
                     while (!shouldEnd)
                     {
-                        timeBeforeLap = car.Stopwatch.Elapsed;
                         trackPointsPasses = new List<TrackPointPass>();
                         foreach (var trackPoint in _track.GetLap(car))
                         {
                             trackPointsPasses.Add(await trackPoint.PassAsync(car));
                         }
-                        carsLaps[car].Add(new Lap(car, car.Lap, trackPointsPasses, car.Stopwatch.Elapsed - timeBeforeLap));
 
+                        await printAsyncMutex.WaitAsync();
                         timeElapsedSinceStart = car.Stopwatch.Elapsed;
                         bestTimeElapsedSinceStart = lapBestCompletionTimes.GetOrAdd(car.Lap, timeElapsedSinceStart);
                         if (bestTimeElapsedSinceStart.Equals(timeElapsedSinceStart))
                         {
-                            Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {(car.Stopwatch.Elapsed - timeBeforeLap).ToString(@"mm\:ss\.ff")}");
-                            lapsHeaderPrinted[car.Lap] = true;
+                            Console.WriteLine($"\nLap: {car.Lap}\n{car.Driver}: {(timeElapsedSinceStart - totalDriveTime).ToString(@"mm\:ss\.ff")}");
                         }
                         else if (!lapBestCompletionTimes.ContainsKey(car.Lap + 1))
                         {
-                            while (!lapsHeaderPrinted[car.Lap]) continue;
-                            Console.WriteLine($"{car.Driver}: +{(car.Stopwatch.Elapsed - bestTimeElapsedSinceStart).ToString(@"mm\:ss\.ff")}");
+                            Console.WriteLine($"{car.Driver}: +{(timeElapsedSinceStart - bestTimeElapsedSinceStart).ToString(@"mm\:ss\.ff")}");
                         }
+                        printAsyncMutex.Release();
+                        carsLaps[car].Add(new Lap(car, car.Lap, trackPointsPasses, timeElapsedSinceStart - totalDriveTime));
+                        totalDriveTime = timeElapsedSinceStart;
                         if (car.Lap == _numberOfLaps) shouldEnd = true;
                         car.Lap++;
                     }
                 }));
             }
+            //allCarsReady.Wait();
+            raceStopwatch.Start();
+            startSignal.Set();
             await Task.WhenAll(tasks.ToArray());
             foreach (RaceCar car in _cars) car.Reset();
             RaceResults = carsLaps;
