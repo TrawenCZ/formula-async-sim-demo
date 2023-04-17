@@ -30,7 +30,6 @@ public class Race
             SemaphoreSlim printAsyncMutex = new SemaphoreSlim(1, 1);    // Mutex itself cannot be async, so this is a workaround
             ManualResetEventSlim startSignal = new ManualResetEventSlim(false);
             //CountdownEvent allCarsReady = new CountdownEvent(_cars.Count());
-            //var lapsHeaderPrinted = Enumerable.Repeat(false, _numberOfLaps + 1).ToList();   // + 1 so I can use lap number as index
             foreach (RaceCar car in _cars)
             {
                 carsLaps.TryAdd(car, new List<Lap>());
@@ -83,6 +82,7 @@ public class Race
             raceStopwatch.Start();
             startSignal.Set();
             await Task.WhenAll(tasks.ToArray());
+            raceStopwatch.Stop();
             foreach (RaceCar car in _cars) car.Reset();
             RaceResults = carsLaps;
         });

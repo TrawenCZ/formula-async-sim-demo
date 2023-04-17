@@ -24,5 +24,5 @@ foreach (var (driver, lapNum) in race2.GetFastestLaps())
 
 race2.PrintOrderTableOfLap(3);
 race2.PrintTrackPointsStatistics();
-Console.WriteLine("\nHovno\n");
+Console.WriteLine("\nSplit\n");
 race2.PrintTrackPointsStatistics();

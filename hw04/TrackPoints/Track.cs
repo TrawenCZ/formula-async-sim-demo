@@ -55,15 +55,15 @@ public class Track
     public IEnumerable<ITrackPoint> GetLap(RaceCar car)
     {
         if (_pitLane == null || _pitLaneEntry == null || _pitLaneExit == null) throw new Exception("PitLane is not set");
-        if (car.ShouldChangeTires()) 
-        {
-            car.WentToPitStop = true;
-            return _lapWithPitLaneEntry;
-        }
         if (car.WentToPitStop)
         {
             car.WentToPitStop = false;
             return _lapWithPitLaneExit;
+        }
+        if (car.ShouldChangeTires()) 
+        {
+            car.WentToPitStop = true;
+            return _lapWithPitLaneEntry;
         }
         return _trackPoints;
     }

@@ -30,7 +30,7 @@ public class Turn : ITrackPoint
                 _semaphore.Release();
 
                 await Task.Delay(_averageTime * car.TurnSpeed * car.GetCurrentTire().GetSpeed());
-                return new TrackPointPass(this, waitingTime, car.Stopwatch.Elapsed - waitingTime);
+                return new TrackPointPass(this, waitingTime, car.Stopwatch.Elapsed - (waitingTime + timeBeforeWait));
            });
     }
 }

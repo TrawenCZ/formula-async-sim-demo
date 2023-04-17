@@ -7,7 +7,7 @@ namespace hw04.Car;
 
 public class RaceCar
 {
-    
+
     /// <summary>
     /// Seznam pneumatik v pořadí, v jakém je bude auto při závodu měnit. 
     /// </summary>
@@ -27,7 +27,7 @@ public class RaceCar
             _lap = value;
         } }
     private int _currentTireIndex = 0;
-    
+
 
     /// <param name="driver">Jméno řidiče formule</param>
     /// <param name="team">Tým, pod který formule patří</param>
@@ -53,6 +53,5 @@ public class RaceCar
     {
         _lap = 1;
         _currentTireIndex = 0;
-        Stopwatch.Reset();
     }
 }

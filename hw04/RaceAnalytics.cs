@@ -2,6 +2,7 @@ using hw04.Car;
 using hw04.Race;
 using hw04.TrackPoints;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text;
 
 namespace hw04;
@@ -36,6 +37,7 @@ public static class RaceAnalytics
     public static void PrintOrderTableOfLap(this Race.Race race, int lap)
     {
         if (race.RaceResults == null) throw new ArgumentException(_raceHasntFinishedMsg);
+        Console.WriteLine($"Order of finishes in lap {lap}:");
         int currentPlace = 0;
         race.RaceResults.AsParallel()
             .Select(carResult =>
@@ -54,15 +56,15 @@ public static class RaceAnalytics
     public static void PrintTrackPointsStatistics(this Race.Race race)
     {
         if (race.RaceResults == null) throw new ArgumentException(_raceHasntFinishedMsg);
-        ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)> fastestDrive = new ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)>();
-        ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)> longestWait = new ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)>();
+        ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)> fastestDrives = new ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)>();
+        ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)> longestWaits = new ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)>();
         race.RaceResults.AsParallel().ForAll(carResult =>
         {
-            carResult.Value.AsParallel().ForAll(lap =>
+            carResult.Value.ForEach(lap =>
             {
                 lap.TrackPointPasses.ForEach(p =>
                 {
-                    fastestDrive.AddOrUpdate(p.TrackPoint, (lap, p.DrivingTime), (key, value) =>
+                    fastestDrives.AddOrUpdate(p.TrackPoint, (lap, p.DrivingTime), (key, value) =>
                     {
                         if (value.TimeTaken > p.DrivingTime)
                         {
@@ -71,7 +73,7 @@ public static class RaceAnalytics
                         return value;
                     });
 
-                    longestWait.AddOrUpdate(p.TrackPoint, (lap, p.WaitingTime), (key, value) =>
+                    longestWaits.AddOrUpdate(p.TrackPoint, (lap, p.WaitingTime), (key, value) =>
                     {
                         if (value.TimeTaken < p.WaitingTime)
                         {
@@ -83,10 +85,18 @@ public static class RaceAnalytics
             });
         });
 
-        foreach (ITrackPoint trackPoint in fastestDrive.Keys)
+        /*
+        var drivesSortTask = Task.Run(() => fastestDrives.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value));
+        var waitsSortTask = Task.Run(() => longestWaits.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value));
+        */
+
+        var fastestDrivesSorted = fastestDrives.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value);
+        var longestWaitsSorted = longestWaits.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value);
+        
+        foreach (ITrackPoint trackPoint in fastestDrivesSorted.Keys)
         {
-            string fastestDriveDataString = ExtractData(fastestDrive[trackPoint]);
-            string longestWaitDataString = ExtractData(longestWait[trackPoint]);
+            string fastestDriveDataString = ExtractData(fastestDrivesSorted[trackPoint]);
+            string longestWaitDataString = ExtractData(longestWaitsSorted[trackPoint]);
             Console.WriteLine($"{trackPoint.Description}\n\tFastest Drive Trough: {fastestDriveDataString}\n\tLongest Wait: {longestWaitDataString}");
         }
 

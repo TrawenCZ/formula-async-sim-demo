@@ -31,7 +31,7 @@ public class PitLane : ITrackPoint
             await Task.Delay(TimeSpan.FromMilliseconds(_random.Next(50, 101)));
             car.ChangeTires();
             currentPitStopExchanges[car.Team].Release();
-            return new TrackPointPass(this, waitingTime, car.Stopwatch.Elapsed - waitingTime);
+            return new TrackPointPass(this, waitingTime, car.Stopwatch.Elapsed - (waitingTime + timeBeforeWait));
         });
     }
 }
