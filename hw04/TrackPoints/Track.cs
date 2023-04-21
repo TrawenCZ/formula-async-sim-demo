@@ -43,6 +43,8 @@ public class Track
         _lapWithPitLaneExit.RemoveRange(0, nextPoint + 1);
         _lapWithPitLaneExit = new List<ITrackPoint>(new ITrackPoint[] { _pitLane, _pitLaneExit }).Concat(_lapWithPitLaneExit).ToList();
 
+        Console.WriteLine("PITLANE: " + _lapWithPitLaneExit[2].Description);
+
         return this;
     }
 

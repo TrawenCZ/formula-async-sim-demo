@@ -19,18 +19,15 @@ public class Turn : ITrackPoint
         _semaphore = new SemaphoreSlim(carsAllowed, carsAllowed);
     }
 
-    public Task<TrackPointPass> PassAsync(RaceCar car)
+    public async Task<TrackPointPass> PassAsync(RaceCar car)
     {
-        return Task.Run(async () =>
-            {
-                var timeBeforeWait = car.Stopwatch.Elapsed;
-                await _semaphore.WaitAsync();
-                TimeSpan waitingTime = car.Stopwatch.Elapsed - timeBeforeWait;
-                await Task.Delay(DriveInTime);
-                _semaphore.Release();
+        var timeBeforeWait = car.Stopwatch.Elapsed;
+        await _semaphore.WaitAsync();
+        TimeSpan waitingTime = car.Stopwatch.Elapsed - timeBeforeWait;
+        await Task.Delay(DriveInTime);
+        _semaphore.Release();
 
-                await Task.Delay(_averageTime * car.TurnSpeed * car.GetCurrentTire().GetSpeed());
-                return new TrackPointPass(this, waitingTime, car.Stopwatch.Elapsed - (waitingTime + timeBeforeWait));
-           });
+        await Task.Delay(_averageTime * car.TurnSpeed * car.GetCurrentTire().GetSpeed());
+        return new TrackPointPass(this, waitingTime, car.Stopwatch.Elapsed - (waitingTime + timeBeforeWait));
     }
 }

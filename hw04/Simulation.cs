@@ -12,23 +12,17 @@ public class Simulation
         _track = track;
     }
 
-    public Task<Race.Race> SimulateRaceAsync(List<RaceCar> cars, int numberOfLaps)
+    public async Task<Race.Race> SimulateRaceAsync(List<RaceCar> cars, int numberOfLaps)
     {
-        return Task.Run(async () =>
-        {
-            var newRace = new Race.Race(cars, _track, numberOfLaps);
-            await newRace.StartAsync();
-            return newRace;
-        });
+        var newRace = new Race.Race(cars, _track, numberOfLaps);
+        await newRace.StartAsync();
+        return newRace;
     }
 
-    public Task<List<Lap>> SimulateLapsAsync(RaceCar car, int numberOfLaps)
+    public async Task<List<Lap>> SimulateLapsAsync(RaceCar car, int numberOfLaps)
     {
-        return Task.Run(async () =>
-        {
-            var race = new Race.Race(new List<RaceCar>(new RaceCar[] { car }), _track, numberOfLaps);
-            await race.StartAsync();
-            return race.RaceResults == null ? new List<Lap>() : race.RaceResults[car].ToList();
-        });
+        var race = new Race.Race(new List<RaceCar>() { car }, _track, numberOfLaps);
+        await race.StartAsync();
+        return race.RaceResults == null ? new List<Lap>() : race.RaceResults[car].ToList();
     }
 }

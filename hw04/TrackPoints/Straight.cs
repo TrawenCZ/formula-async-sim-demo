@@ -14,13 +14,11 @@ public class Straight : ITrackPoint
         _averageTime = averageTime;
     }
 
-    public Task<TrackPointPass> PassAsync(RaceCar car)
+    public async Task<TrackPointPass> PassAsync(RaceCar car)
     {
-        return Task.Run(async () => {
-            var timeBeforeDrive = car.Stopwatch.Elapsed;
-            var drivingTime = _averageTime * car.StraightSpeed * car.GetCurrentTire().GetSpeed();
-            await Task.Delay(drivingTime);
-            return new TrackPointPass(this, TimeSpan.Zero, car.Stopwatch.Elapsed - timeBeforeDrive); 
-        });
+        var timeBeforeDrive = car.Stopwatch.Elapsed;
+        var drivingTime = _averageTime * car.StraightSpeed * car.GetCurrentTire().GetSpeed();
+        await Task.Delay(drivingTime);
+        return new TrackPointPass(this, TimeSpan.Zero, car.Stopwatch.Elapsed - timeBeforeDrive); 
     }
 }
