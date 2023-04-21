@@ -18,14 +18,6 @@ public class RaceCar
     public double StraightSpeed { get; set; }
     public Stopwatch Stopwatch { get; set; }
     public bool WentToPitStop { get; set; }
-    private int _lap = 1;
-    public int Lap
-    {
-        get { return _lap; }
-        set {
-            if (value == _lap + 1) GetCurrentTire().AddLap();
-            _lap = value;
-        } }
     private int _currentTireIndex = 0;
 
 
@@ -51,7 +43,6 @@ public class RaceCar
 
     public void Reset()
     {
-        _lap = 1;
         _currentTireIndex = 0;
     }
 }

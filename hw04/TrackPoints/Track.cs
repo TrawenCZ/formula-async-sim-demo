@@ -1,4 +1,5 @@
 using hw04.Car;
+using System.Collections.Immutable;
 
 namespace hw04.TrackPoints;
 
@@ -8,14 +9,14 @@ public class Track
     private Turn? _pitLaneEntry;
     private Turn? _pitLaneExit;
     private PitLane? _pitLane;
-    private List<ITrackPoint> _lapWithPitLaneEntry;
-    private List<ITrackPoint> _lapWithPitLaneExit;
+    private ImmutableList<ITrackPoint> _lapWithPitLaneEntry;
+    private ImmutableList<ITrackPoint> _lapWithPitLaneExit;
 
     public Track()
     {
         _trackPoints = new List<ITrackPoint>();
-        _lapWithPitLaneEntry = new List<ITrackPoint>();
-        _lapWithPitLaneExit = new List<ITrackPoint>();
+        _lapWithPitLaneEntry = ImmutableList.Create<ITrackPoint>();
+        _lapWithPitLaneExit = ImmutableList.Create<ITrackPoint>();
     }
 
     public Track AddTurn(string description, TimeSpan averageTime, int carsAllowed)
@@ -37,13 +38,9 @@ public class Track
         _pitLaneEntry = new Turn("PitLane Entry", entryTime, 1);
         _pitLaneExit = new Turn("PitLane Exit", exitTime, 1);
 
-        _lapWithPitLaneEntry = new List<ITrackPoint>(_trackPoints) { _pitLaneEntry };
+        _lapWithPitLaneEntry = new List<ITrackPoint>(_trackPoints) { _pitLaneEntry }.ToImmutableList();
 
-        _lapWithPitLaneExit = new List<ITrackPoint>(_trackPoints);
-        _lapWithPitLaneExit.RemoveRange(0, nextPoint + 1);
-        _lapWithPitLaneExit = new List<ITrackPoint>(new ITrackPoint[] { _pitLane, _pitLaneExit }).Concat(_lapWithPitLaneExit).ToList();
-
-        Console.WriteLine("PITLANE: " + _lapWithPitLaneExit[2].Description);
+        _lapWithPitLaneExit = new List<ITrackPoint>() { _pitLane, _pitLaneExit }.Concat(_trackPoints.Skip(nextPoint)).ToImmutableList();
 
         return this;
     }

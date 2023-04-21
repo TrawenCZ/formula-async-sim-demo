@@ -9,10 +9,8 @@ namespace hw04;
 
 public static class RaceAnalytics
 {
-    private static readonly string _raceHasntFinishedMsg = "Race has not been finished";
     public static List<(RaceCar Car, TimeSpan TotalTime)> GetOrder(this Race.Race race)
     {
-        if (race.RaceResults == null) throw new ArgumentException(_raceHasntFinishedMsg);
         return race.RaceResults.AsParallel()
             .Select(carResult =>
             {
@@ -26,7 +24,6 @@ public static class RaceAnalytics
 
     public static List<(string Driver, int FastestLapNumber)> GetFastestLaps(this Race.Race race)
     {
-        if (race.RaceResults == null) throw new ArgumentException(_raceHasntFinishedMsg);
         return race.RaceResults.AsParallel().Select(carResult =>
         {
             int fastestLapNumber = carResult.Value.OrderBy(lap => lap.CompletionTime).First().Number;
@@ -36,7 +33,6 @@ public static class RaceAnalytics
 
     public static void PrintOrderTableOfLap(this Race.Race race, int lap)
     {
-        if (race.RaceResults == null) throw new ArgumentException(_raceHasntFinishedMsg);
         Console.WriteLine($"Order of finishes in lap {lap}:");
         int currentPlace = 0;
         race.RaceResults.AsParallel()
@@ -55,7 +51,6 @@ public static class RaceAnalytics
 
     public static void PrintTrackPointsStatistics(this Race.Race race)
     {
-        if (race.RaceResults == null) throw new ArgumentException(_raceHasntFinishedMsg);
         ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)> fastestDrives = new ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)>();
         ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)> longestWaits = new ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)>();
         race.RaceResults.AsParallel().ForAll(carResult =>
