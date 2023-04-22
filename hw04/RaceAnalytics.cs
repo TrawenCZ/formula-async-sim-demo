@@ -2,8 +2,6 @@ using hw04.Car;
 using hw04.Race;
 using hw04.TrackPoints;
 using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Text;
 
 namespace hw04;
 
