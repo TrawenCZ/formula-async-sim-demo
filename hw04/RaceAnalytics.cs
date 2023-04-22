@@ -31,11 +31,9 @@ public static class RaceAnalytics
         }).ToList();
     }
 
-    public static void PrintOrderTableOfLap(this Race.Race race, int lap)
+    public static List<string> GetDriverOrderOfLap(this Race.Race race, int lap)
     {
-        Console.WriteLine($"Order of finishes in lap {lap}:");
-        int currentPlace = 0;
-        race.RaceResults.AsParallel()
+        return race.RaceResults.AsParallel()
             .Select(carResult =>
             {
                 TimeSpan timeSum = TimeSpan.Zero;
@@ -46,10 +44,11 @@ public static class RaceAnalytics
                 return (carResult.Key.Driver, TimeSum: timeSum);
             })
             .OrderBy(result => result.TimeSum)
-            .ToList().ForEach(result => Console.WriteLine($"{++currentPlace}. {result.Driver}"));
+            .Select(result => result.Driver)
+            .ToList();
     }
 
-    public static void PrintTrackPointsStatistics(this Race.Race race)
+    public static (Dictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)> FastestDrives, Dictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)> LongestWaits) GetTrackpointsStatistics(this Race.Race race)
     {
         ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)> fastestDrives = new ConcurrentDictionary<ITrackPoint, (Lap FastestDriveTroughLap, TimeSpan TimeTaken)>();
         ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)> longestWaits = new ConcurrentDictionary<ITrackPoint, (Lap LongestWaitingLap, TimeSpan TimeTaken)>();
@@ -80,30 +79,7 @@ public static class RaceAnalytics
             });
         });
 
-        /*
-        var drivesSortTask = Task.Run(() => fastestDrives.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value));
-        var waitsSortTask = Task.Run(() => longestWaits.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value));
-        */
-
-        var fastestDrivesSorted = fastestDrives.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value);
-        var longestWaitsSorted = longestWaits.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value);
-        
-        foreach (ITrackPoint trackPoint in fastestDrivesSorted.Keys)
-        {
-            string fastestDriveDataString = ExtractData(fastestDrivesSorted[trackPoint]);
-            string longestWaitDataString = ExtractData(longestWaitsSorted[trackPoint]);
-            Console.WriteLine($"{trackPoint.Description}\n\tFastest Drive Trough: {fastestDriveDataString}\n\tLongest Wait: {longestWaitDataString}");
-        }
-
-    }
-
-    private static string ExtractData((Lap Lap, TimeSpan TimeTaken) data)
-    {
-        return new StringBuilder()
-            .Append("\n\t\tDriver: " + data.Lap.RaceCar.Driver)
-            .Append("\n\t\tTime taken: " + data.TimeTaken.ToString(@"mm\:ss\.ff"))
-            .Append("\n\t\tLap: " + data.Lap.Number)
-            .ToString();
+        return (fastestDrives.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value), 
+            longestWaits.OrderBy(x => int.TryParse(x.Key.Description.Split()[0], out var res) ? res : int.MaxValue).ToDictionary(x => x.Key, x => x.Value));
     }
 }
-

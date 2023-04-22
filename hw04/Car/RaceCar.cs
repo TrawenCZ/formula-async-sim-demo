@@ -11,14 +11,23 @@ public class RaceCar
     /// <summary>
     /// Seznam pneumatik v pořadí, v jakém je bude auto při závodu měnit. 
     /// </summary>
-    public List<Tire> TireStrategy { get; set; }
+    private int _currentTireIndex = 0;
+    private List<Tire> _tireStrategy;
+    public List<Tire> TireStrategy { 
+        get {
+            return _tireStrategy;
+        }
+        set {
+            _currentTireIndex = 0;
+            _tireStrategy = value;
+        } 
+    }
     public string Driver { get; set; }
     public Team Team { get; set; }
     public double TurnSpeed { get; set; }
     public double StraightSpeed { get; set; }
-    public Stopwatch Stopwatch { get; set; }
     public bool WentToPitStop { get; set; }
-    private int _currentTireIndex = 0;
+    
 
 
     /// <param name="driver">Jméno řidiče formule</param>
@@ -31,18 +40,12 @@ public class RaceCar
         Team = team;
         TurnSpeed = turnSpeed;
         StraightSpeed = straightSpeed;
-        TireStrategy = new List<Tire>();
-        Stopwatch = new Stopwatch();
+        _tireStrategy = new List<Tire>();
         WentToPitStop = false;
     }
 
-    public Tire GetCurrentTire() => TireStrategy[_currentTireIndex];
-    public bool ShouldChangeTires() => (_currentTireIndex + 1 != TireStrategy.Count) && GetCurrentTire().NeedsChange();
+    public Tire GetCurrentTire() => _tireStrategy[_currentTireIndex];
+    public bool ShouldChangeTires() => (_currentTireIndex + 1 != _tireStrategy.Count) && GetCurrentTire().NeedsChange();
 
     public void ChangeTires() => _currentTireIndex++;
-
-    public void Reset()
-    {
-        _currentTireIndex = 0;
-    }
 }

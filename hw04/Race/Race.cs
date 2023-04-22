@@ -22,18 +22,13 @@ public class Race
     public async Task StartAsync()
     {
         bool shouldEnd = false;
-        ConcurrentDictionary<int, TimeSpan> lapBestCompletionTimes = new ConcurrentDictionary<int, TimeSpan>();
+        ConcurrentDictionary<int, (TimeSpan BestTimeElapsedSinceStart, RaceCar Identifier)> lapBestCompletionTimes = new ConcurrentDictionary<int, (TimeSpan, RaceCar)>();
         ConcurrentDictionary<RaceCar, List<Lap>> carsLaps = new ConcurrentDictionary<RaceCar, List<Lap>>();
         var tasks = new List<Task<List<Lap>>>();
         SemaphoreSlim printAsyncMutex = new SemaphoreSlim(1, 1);    // Mutex itself cannot be async, so this is a workaround
         ManualResetEventSlim startSignal = new ManualResetEventSlim(false);
+        var ticksAtRaceStart = 0L;
         //CountdownEvent allCarsReady = new CountdownEvent(_cars.Count());
-
-        Stopwatch raceStopwatch = new Stopwatch();
-        foreach (RaceCar car in _cars)
-        {
-            car.Stopwatch = raceStopwatch;
-        }
 
         foreach (var car in _cars)
         {
@@ -44,6 +39,8 @@ public class Race
                 TimeSpan timeElapsedSinceStart;
                 TimeSpan totalDriveTime = TimeSpan.Zero;
                 List<Lap> laps = new List<Lap>();
+                string _timeFormattingString = @"mm\:ss\.ff";
+                RaceCar identifier;
                 int lap = 1;
                 //allCarsReady.Signal();
                 startSignal.Wait();
@@ -56,20 +53,21 @@ public class Race
                     }
 
                     await printAsyncMutex.WaitAsync();
-                    timeElapsedSinceStart = car.Stopwatch.Elapsed;
-                    bestTimeElapsedSinceStart = lapBestCompletionTimes.GetOrAdd(lap, timeElapsedSinceStart);
-                    if (bestTimeElapsedSinceStart.Equals(timeElapsedSinceStart))
+                    timeElapsedSinceStart = Stopwatch.GetElapsedTime(ticksAtRaceStart);
+                    (bestTimeElapsedSinceStart, identifier) = lapBestCompletionTimes.GetOrAdd(lap, (timeElapsedSinceStart, car));
+                    if (car == identifier)
                     {
-                        Console.WriteLine($"\nLap: {lap}\n{car.Driver}: {(timeElapsedSinceStart).ToString(@"mm\:ss\.ff")}");
+                        Console.WriteLine($"\nLap: {lap}\n{car.Driver}: {(timeElapsedSinceStart).ToString(_timeFormattingString)}");
                     }
                     else if (!lapBestCompletionTimes.ContainsKey(lap + 1))
                     {
-                        Console.WriteLine($"{car.Driver}: +{(timeElapsedSinceStart - bestTimeElapsedSinceStart).ToString(@"mm\:ss\.ff")}");
+                        Console.WriteLine($"{car.Driver}: +{(timeElapsedSinceStart - bestTimeElapsedSinceStart).ToString(_timeFormattingString)}");
                     }
-                    printAsyncMutex.Release();
-                    laps.Add(new Lap(car, lap, trackPointsPasses, timeElapsedSinceStart - totalDriveTime));
-                    totalDriveTime = timeElapsedSinceStart;
                     if (lap == _numberOfLaps) shouldEnd = true;
+                    printAsyncMutex.Release();
+                    //if (lap == 22) Console.WriteLine(car.Driver + " " + (timeElapsedSinceStart - totalDriveTime).ToString(_timeFormattingString));
+                    laps.Add(new Lap(car, lap, trackPointsPasses, timeElapsedSinceStart - totalDriveTime));
+                    totalDriveTime = timeElapsedSinceStart;                   
                     car.GetCurrentTire().AddLap();
                     lap++;
                 }
@@ -77,18 +75,12 @@ public class Race
             }));
         }
         //allCarsReady.Wait();
-        raceStopwatch.Start();
+        ticksAtRaceStart = Stopwatch.GetTimestamp();
         startSignal.Set();
         await Task.WhenAll(tasks);
-        raceStopwatch.Stop();
         for (int i = 0; i < _cars.Count(); i++)
         {
-            List<Lap> taskResult = await tasks[0];
-            RaceCar car = _cars.ElementAt(i);
-            car.Reset();
-            RaceResults.Add(car, await tasks[i]);
+            RaceResults.Add(_cars.ElementAt(i), await tasks[i]);
         }
-
-        //foreach (RaceCar car in _cars) car.Reset();
     }
 }

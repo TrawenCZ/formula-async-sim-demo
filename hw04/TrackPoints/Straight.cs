@@ -1,5 +1,6 @@
 using hw04.Car;
 using hw04.Race;
+using System.Diagnostics;
 
 namespace hw04.TrackPoints;
 
@@ -16,9 +17,8 @@ public class Straight : ITrackPoint
 
     public async Task<TrackPointPass> PassAsync(RaceCar car)
     {
-        var timeBeforeDrive = car.Stopwatch.Elapsed;
-        var drivingTime = _averageTime * car.StraightSpeed * car.GetCurrentTire().GetSpeed();
-        await Task.Delay(drivingTime);
-        return new TrackPointPass(this, TimeSpan.Zero, car.Stopwatch.Elapsed - timeBeforeDrive); 
+        var ticksAtStart = Stopwatch.GetTimestamp();
+        await Task.Delay(_averageTime * car.StraightSpeed * car.GetCurrentTire().GetSpeed());
+        return new TrackPointPass(this, TimeSpan.Zero, Stopwatch.GetElapsedTime(ticksAtStart)); 
     }
 }
