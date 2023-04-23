@@ -10,6 +10,7 @@ public class Race
     private Track _track;
     private readonly IEnumerable<RaceCar> _cars;
     private readonly int _numberOfLaps;
+    private bool _shouldEndPrinting = false;
     public Dictionary<RaceCar, List<Lap>> RaceResults { get; private set; }
     public Race(IEnumerable<RaceCar> cars, Track track, int numberOfLaps)
     {
@@ -18,17 +19,18 @@ public class Race
         _cars = cars;
         RaceResults = cars.ToDictionary(car => car, car => new List<Lap>());
     }
-    
+
     public async Task StartAsync()
     {
         bool shouldEnd = false;
-        bool shouldEndPrinting = false;
         SemaphoreSlim printingTicketGiver = new SemaphoreSlim(0, _cars.Count() + 1);
         SemaphoreSlim timeGetterMutex = new SemaphoreSlim(1, 1);
         ConcurrentQueue<(TimeSpan TimeSinceStart, string Driver, int Lap)> printingQueue = new ConcurrentQueue<(TimeSpan, string, int)>();
         ManualResetEventSlim startSignal = new ManualResetEventSlim(false);
         var tasks = new List<Task>();
         var ticksAtRaceStart = 0L;
+
+        var printingTask = PrintingTaskAsync(printingQueue, printingTicketGiver);
 
         foreach (var car in _cars)
         {
@@ -57,14 +59,24 @@ public class Race
 
                     if (lap == _numberOfLaps) shouldEnd = true;
                     RaceResults[car].Add(new Lap(car, lap, trackPointsPasses, timeElapsedSinceStart - totalDriveTime));
-                    totalDriveTime = timeElapsedSinceStart;                   
+                    totalDriveTime = timeElapsedSinceStart;
                     car.GetCurrentTire().AddLap();
                     lap++;
                 }
             }));
         }
 
-        var printingTask = Task.Run(async () =>
+        ticksAtRaceStart = Stopwatch.GetTimestamp();
+        startSignal.Set();
+        await Task.WhenAll(tasks);
+        _shouldEndPrinting = true;
+        printingTicketGiver.Release();          // give printing task chance to end
+        await printingTask;
+    }
+
+    private Task PrintingTaskAsync(ConcurrentQueue<(TimeSpan TimeSinceStart, string Driver, int Lap)> printingQueue, SemaphoreSlim printingTicketGiver)
+    {
+        return Task.Run(async () =>
         {
             string timeFormattingString = @"mm\:ss\.ff";
             int lapPrintCounter = 0;
@@ -79,20 +91,14 @@ public class Race
                         Console.WriteLine($"{(queueItem.Lap == 1 ? string.Empty : '\n')}Lap: {queueItem.Lap}\n{queueItem.Driver}: {queueItem.TimeSinceStart.ToString(timeFormattingString)}");
                         currentBestTimeSinceStart = queueItem.TimeSinceStart;
                         lapPrintCounter++;
-                    } else if (queueItem.Lap == lapPrintCounter)
+                    }
+                    else if (queueItem.Lap == lapPrintCounter)
                     {
                         Console.WriteLine($"{queueItem.Driver}: +{(queueItem.TimeSinceStart - currentBestTimeSinceStart).ToString(timeFormattingString)}");
                     }
                 }
-                if (shouldEndPrinting && printingQueue.Count == 0) return;
+                if (_shouldEndPrinting && printingQueue.Count == 0) return;
             }
         });
-
-        ticksAtRaceStart = Stopwatch.GetTimestamp();
-        startSignal.Set();
-        await Task.WhenAll(tasks);
-        shouldEndPrinting = true;
-        printingTicketGiver.Release();
-        await printingTask;
     }
 }

@@ -44,7 +44,7 @@ foreach (ITrackPoint trackPoint in fastestDrives.Keys)
 {
     Console.WriteLine($"{trackPoint.Description}\n\tFastest Drive Trough: {ExtractData(fastestDrives[trackPoint])}\n\tLongest Wait: {ExtractData(longestWaits[trackPoint])}");
 }
-static string ExtractData((Lap Lap, TimeSpan TimeTaken) data)
+string ExtractData((Lap Lap, TimeSpan TimeTaken) data)
 {
     return new StringBuilder()
         .Append("\n\t\tDriver: " + data.Lap.RaceCar.Driver)

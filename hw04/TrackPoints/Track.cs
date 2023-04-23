@@ -1,14 +1,10 @@
 using hw04.Car;
-using System.Collections.Immutable;
 
 namespace hw04.TrackPoints;
 
 public class Track
 {
     private readonly List<ITrackPoint> _trackPoints;
-    private Turn? _pitLaneEntry;
-    private Turn? _pitLaneExit;
-    private PitLane? _pitLane;
     private List<ITrackPoint>? _lapWithPitLaneEntry;
     private List<ITrackPoint>? _lapWithPitLaneExit;
 
@@ -36,13 +32,13 @@ public class Track
     public Track AddPitLane(TimeSpan entryTime, TimeSpan exitTime, List<Team> teams,
         int nextPoint)
     {
-        _pitLane = new PitLane("PitLane", teams);
-        _pitLaneEntry = new Turn("PitLane Entry", entryTime, 1);
-        _pitLaneExit = new Turn("PitLane Exit", exitTime, 1);
+        PitLane pitLane = new PitLane("PitLane", teams);
+        Turn pitLaneEntry = new Turn("PitLane Entry", entryTime, 1);
+        Turn pitLaneExit = new Turn("PitLane Exit", exitTime, 1);
 
-        _lapWithPitLaneEntry = new List<ITrackPoint>(_trackPoints) { _pitLaneEntry }.ToList();
+        _lapWithPitLaneEntry = new List<ITrackPoint>(_trackPoints) { pitLaneEntry }.ToList();
 
-        _lapWithPitLaneExit = new List<ITrackPoint>() { _pitLane, _pitLaneExit }.Concat(_trackPoints.Skip(nextPoint)).ToList();
+        _lapWithPitLaneExit = new List<ITrackPoint>() { pitLane, pitLaneExit }.Concat(_trackPoints.Skip(nextPoint)).ToList();
 
         return this;
     }
