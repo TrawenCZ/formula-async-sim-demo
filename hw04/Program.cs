@@ -17,7 +17,9 @@ CurrentF1.Cars.All.ForEach(c => c.SetMediumHardStrategy());
 Console.WriteLine("\nFinish times of racers:");
 foreach (var (car, totalTime) in race2.GetOrder())
 {
-     Console.WriteLine($"{car.Driver}: {totalTime.Minutes} min {totalTime.Seconds} s {totalTime.Milliseconds} ms");
+    Console.Write(car.Driver + ": ");
+    if (totalTime != null) Console.WriteLine($"{totalTime?.Minutes} min {totalTime?.Seconds} s {totalTime?.Milliseconds} ms");
+    else Console.WriteLine("DNF");
 }
 
 Console.WriteLine("\nFastest laps for racers:");
@@ -26,11 +28,12 @@ foreach (var (driver, lapNum) in race2.GetFastestLaps())
     Console.WriteLine($"{driver}'s fastest lap is {lapNum}");
 }
 
-int position = 0;
-Console.WriteLine($"\nOrder of finishes in lap 2:");
-foreach (var driver in race2.GetDriverOrderOfLap(2))
+int position = 1;
+int lapToPrint = 20;
+Console.WriteLine($"\nOrder of finishes in lap {lapToPrint}:");
+foreach (var driver in race2.GetDriverOrderOfLap(lapToPrint))
 {
-    Console.WriteLine($"{++position}. {driver}");
+    Console.WriteLine($"{position++}. {driver}");
 }
 
 

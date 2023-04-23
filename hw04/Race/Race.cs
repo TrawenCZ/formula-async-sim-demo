@@ -8,8 +8,8 @@ namespace hw04.Race;
 public class Race
 {
     private Track _track;
-    private int _numberOfLaps;
     private readonly IEnumerable<RaceCar> _cars;
+    private readonly int _numberOfLaps;
     public Dictionary<RaceCar, List<Lap>> RaceResults { get; private set; }
     public Race(IEnumerable<RaceCar> cars, Track track, int numberOfLaps)
     {
@@ -76,7 +76,7 @@ public class Race
                 {
                     if (queueItem.Lap > lapPrintCounter)
                     {
-                        Console.WriteLine($"\nLap: {queueItem.Lap}\n{queueItem.Driver}: {queueItem.TimeSinceStart.ToString(timeFormattingString)}");
+                        Console.WriteLine($"{(queueItem.Lap == 1 ? string.Empty : '\n')}Lap: {queueItem.Lap}\n{queueItem.Driver}: {queueItem.TimeSinceStart.ToString(timeFormattingString)}");
                         currentBestTimeSinceStart = queueItem.TimeSinceStart;
                         lapPrintCounter++;
                     } else if (queueItem.Lap == lapPrintCounter)

@@ -9,25 +9,27 @@ public class Track
     private Turn? _pitLaneEntry;
     private Turn? _pitLaneExit;
     private PitLane? _pitLane;
-    private ImmutableList<ITrackPoint> _lapWithPitLaneEntry;
-    private ImmutableList<ITrackPoint> _lapWithPitLaneExit;
+    private List<ITrackPoint>? _lapWithPitLaneEntry;
+    private List<ITrackPoint>? _lapWithPitLaneExit;
 
     public Track()
     {
         _trackPoints = new List<ITrackPoint>();
-        _lapWithPitLaneEntry = ImmutableList.Create<ITrackPoint>();
-        _lapWithPitLaneExit = ImmutableList.Create<ITrackPoint>();
     }
 
     public Track AddTurn(string description, TimeSpan averageTime, int carsAllowed)
     {
-        _trackPoints.Add(new Turn(description, averageTime, carsAllowed));
+        var newTurn = new Turn(description, averageTime, carsAllowed);
+        _trackPoints.Add(newTurn);
+        if (_lapWithPitLaneExit != null) _lapWithPitLaneExit.Add(newTurn);
         return this;
     }
 
     public Track AddStraight(string description, TimeSpan averageTime)
     {
-        _trackPoints.Add(new Straight(description, averageTime));
+        var newStraight = new Straight(description, averageTime);
+        _trackPoints.Add(newStraight);
+        if (_lapWithPitLaneExit != null) _lapWithPitLaneExit.Add(newStraight);
         return this;
     }
 
@@ -38,9 +40,9 @@ public class Track
         _pitLaneEntry = new Turn("PitLane Entry", entryTime, 1);
         _pitLaneExit = new Turn("PitLane Exit", exitTime, 1);
 
-        _lapWithPitLaneEntry = new List<ITrackPoint>(_trackPoints) { _pitLaneEntry }.ToImmutableList();
+        _lapWithPitLaneEntry = new List<ITrackPoint>(_trackPoints) { _pitLaneEntry }.ToList();
 
-        _lapWithPitLaneExit = new List<ITrackPoint>() { _pitLane, _pitLaneExit }.Concat(_trackPoints.Skip(nextPoint)).ToImmutableList();
+        _lapWithPitLaneExit = new List<ITrackPoint>() { _pitLane, _pitLaneExit }.Concat(_trackPoints.Skip(nextPoint)).ToList();
 
         return this;
     }
@@ -53,7 +55,7 @@ public class Track
     /// <returns></returns>
     public IEnumerable<ITrackPoint> GetLap(RaceCar car)
     {
-        if (_pitLane == null || _pitLaneEntry == null || _pitLaneExit == null) throw new Exception("PitLane is not set");
+        if (_lapWithPitLaneEntry == null || _lapWithPitLaneExit == null) throw new Exception("PitLane is not set");
         if (car.WentToPitStop)
         {
             car.WentToPitStop = false;

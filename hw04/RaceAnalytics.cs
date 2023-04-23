@@ -7,15 +7,16 @@ namespace hw04;
 
 public static class RaceAnalytics
 {
-    public static List<(RaceCar Car, TimeSpan TotalTime)> GetOrder(this Race.Race race)
+    public static List<(RaceCar Car, TimeSpan? TotalTime)> GetOrder(this Race.Race race)
     {
+        int maxLap = race.RaceResults.Select(result => result.Value.Count).Max();
         return race.RaceResults.AsParallel()
             .Select(carResult =>
             {
-                var totalTime = carResult.Value.Sum(lap => lap.CompletionTime.Ticks);
-                return (Car: carResult.Key, TotalTime: TimeSpan.FromTicks(totalTime));
+                TimeSpan? totalTime = carResult.Value.Count == maxLap ? TimeSpan.FromTicks(carResult.Value.Sum(lap => lap.CompletionTime.Ticks)) : null;
+                return (Car: carResult.Key, TotalTime: totalTime);
             })
-            .OrderBy(result => result.TotalTime)
+            .OrderBy(result => result.TotalTime == null ? TimeSpan.MaxValue : result.TotalTime)
             .ToList();
 
     }
@@ -32,12 +33,13 @@ public static class RaceAnalytics
     public static List<string> GetDriverOrderOfLap(this Race.Race race, int lap)
     {
         return race.RaceResults.AsParallel()
+            .Where(carResult => carResult.Value.Count >= lap)
             .Select(carResult =>
             {
                 TimeSpan timeSum = TimeSpan.Zero;
                 for (int i = 0; i < lap; i++)
                 {
-                    timeSum = carResult.Value.Count > i ? timeSum.Add(carResult.Value[i].CompletionTime) : TimeSpan.MaxValue;
+                    timeSum += carResult.Value[i].CompletionTime;
                 }
                 return (carResult.Key.Driver, TimeSum: timeSum);
             })
